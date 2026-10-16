@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Crop & Farm Management - Dashboard</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Crop & Farm Management System</h1>
+    <nav>
+  <a href="index.html" class="active">Dashboard</a>
+  <a href="farmers.html">Farmers</a>
+  <a href="fields.html">Fields</a>
+  <a href="plantings.html">Plantings</a>
+  <a href="harvests.html">Harvests</a>
+</nav>
+  </header>
+
+  <main>
+    <div class="cards">
+      <div class="card"><div>Farmers</div><div class="num" id="cFarmers">-</div></div>
+      <div class="card"><div>Fields</div><div class="num" id="cFields">-</div></div>
+      <div class="card"><div>Active Plantings</div><div class="num" id="cPlantings">-</div></div>
+      <div class="card"><div>Harvests</div><div class="num" id="cHarvests">-</div></div>
+    </div>
+
+    <div class="grid">
+      <div class="panel"><h3>Total Yield by Crop (kg)</h3><canvas id="yieldChart"></canvas></div>
+      <div class="panel"><h3>Avg Soil Moisture per Field (last 7 days, %)</h3><canvas id="moistureChart"></canvas></div>
+      <div class="panel">
+        <h3>Market Price Trend (Rs per quintal)</h3>
+        <select id="cropSelect"></select>
+        <canvas id="priceChart"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Alerts</h3>
+        <div id="alerts">Loading...</div>
+      </div>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script>
+    const get = (path) => fetch(API + path).then(r => r.json());
+    let priceChart;
+
+    async function loadCards() {
+      const [farmers, fields, plantings, harvests] = await Promise.all([
+        get('/farmers'), get('/fields'), get('/plantings'), get('/harvests')
+      ]);
+      cFarmers.textContent = farmers.length;
+      cFields.textContent = fields.length;
+      cPlantings.textContent = plantings.filter(p => p.status !== 'harvested').length;
+      cHarvests.textContent = harvests.length;
+    }
+
+    async function loadYield() {
+      const data = await get('/reports/yield-by-crop');
+      new Chart(yieldChart, {
+        type: 'bar',
+        data: { labels: data.map(d => d.crop),
+                datasets: [{ label: 'Total kg', data: data.map(d => d.totalKg), backgroundColor: '#66bb6a' }] }
+      });
+    }
+
+    async function loadMoisture() {
+      const data = await get('/reports/moisture-by-field');
+      new Chart(moistureChart, {
+        type: 'bar',
+        data: { labels: data.map(d => d.field),
+                datasets: [{ label: 'Avg moisture %', data: data.map(d => d.avgMoisture), backgroundColor: '#42a5f5' }] },
+        options: { indexAxis: 'y', scales: { y: { ticks: { autoSkip: false } } } }
+      });
+    }
+
+    async function loadCrops() {
+      const crops = await get('/crops');
+      cropSelect.innerHTML = crops.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+      cropSelect.onchange = () => loadPrice(cropSelect.value);
+      if (crops.length) loadPrice(crops[0]._id);
+    }
+
+    async function loadPrice(cropId) {
+      const data = await get('/reports/price-trend/' + cropId);
+      if (priceChart) priceChart.destroy();
+      priceChart = new Chart(document.getElementById('priceChart'), {
+        type: 'line',
+        data: { labels: data.map(d => d.month),
+                datasets: [{ label: 'Avg price', data: data.map(d => d.avgPrice), borderColor: '#ef6c00', tension: 0.3 }] }
+      });
+    }
+
+    async function loadAlerts() {
+      const a = await get('/reports/alerts');
+      let html = '';
+      a.harvestDue.forEach(p => {
+        html += `<div class="alert harvest">Harvest due: <b>${p.crop?.name}</b> in ${p.field?.name} on ${new Date(p.expectedHarvest).toLocaleDateString()}</div>`;
+      });
+      a.lowMoisture.forEach(m => {
+        html += `<div class="alert moisture">Low moisture: <b>${m.field}</b> at ${m.latestMoisture}%</div>`;
+      });
+      alerts.innerHTML = html || 'No alerts right now.';
+    }
+
+    loadCards(); loadYield(); loadMoisture(); loadCrops(); loadAlerts();
+  </script>
+</body>
+</html>

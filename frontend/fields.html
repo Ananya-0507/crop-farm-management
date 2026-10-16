@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Fields</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><h1>Crop & Farm Management System</h1><nav id="nav"></nav></header>
+<main>
+  <div class="panel"><h3 id="title"></h3><form id="form"></form><div id="msg"></div></div>
+  <div class="panel" style="margin-top:16px"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+const soils = ['red', 'black', 'alluvial', 'laterite', 'sandy'].map(s => ({ value: s, label: s }));
+initPage({
+  page: 'fields.html', title: 'Add Field', endpoint: '/fields',
+  fields: [
+    { name: 'farmer', label: 'Farmer', optionsFrom: { endpoint: '/farmers', label: r => r.name } },
+    { name: 'name', label: 'Field name' },
+    { name: 'areaAcres', label: 'Area (acres)', type: 'number', step: '0.1' },
+    { name: 'lng', label: 'Longitude', type: 'number', step: 'any' },
+    { name: 'lat', label: 'Latitude', type: 'number', step: 'any' },
+    { name: 'soilType', label: 'Soil type', options: soils },
+    { name: 'pH', label: 'Soil pH', type: 'number', step: '0.1' }
+  ],
+  columns: [
+    { label: 'Field', get: r => r.name }, { label: 'Farmer', get: r => r.farmer?.name },
+    { label: 'Area (acres)', get: r => r.areaAcres }, { label: 'Soil', get: r => r.soil?.type },
+    { label: 'pH', get: r => r.soil?.pH }
+  ],
+  build: v => ({ farmer: v.farmer, name: v.name, areaAcres: +v.areaAcres,
+    location: { type: 'Point', coordinates: [+v.lng, +v.lat] },
+    soil: { type: v.soilType, pH: +v.pH } })
+});
+</script>
+</body>
+</html>

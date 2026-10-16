@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Plantings</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><h1>Crop & Farm Management System</h1><nav id="nav"></nav></header>
+<main>
+  <div class="panel"><h3 id="title"></h3><form id="form"></form><div id="msg"></div></div>
+  <div class="panel" style="margin-top:16px"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+const statuses = ['sown', 'growing', 'harvested', 'failed'].map(s => ({ value: s, label: s }));
+const fmt = d => new Date(d).toLocaleDateString();
+initPage({
+  page: 'plantings.html', title: 'Add Planting', endpoint: '/plantings',
+  fields: [
+    { name: 'field', label: 'Field', optionsFrom: { endpoint: '/fields', label: r => r.name } },
+    { name: 'crop', label: 'Crop', optionsFrom: { endpoint: '/crops', label: r => r.name } },
+    { name: 'sowDate', label: 'Sow date', type: 'date' },
+    { name: 'expectedHarvest', label: 'Expected harvest', type: 'date' },
+    { name: 'status', label: 'Status', options: statuses }
+  ],
+  columns: [
+    { label: 'Crop', get: r => r.crop?.name }, { label: 'Field', get: r => r.field?.name },
+    { label: 'Sown', get: r => fmt(r.sowDate) }, { label: 'Expected harvest', get: r => fmt(r.expectedHarvest) },
+    { label: 'Status', get: r => r.status }, { label: 'Activities logged', get: r => r.activities.length }
+  ],
+  build: v => v
+});
+</script>
+</body>
+</html>

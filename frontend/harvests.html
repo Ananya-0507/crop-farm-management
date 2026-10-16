@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Harvests</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><h1>Crop & Farm Management System</h1><nav id="nav"></nav></header>
+<main>
+  <div class="panel"><h3 id="title"></h3><form id="form"></form><div id="msg"></div></div>
+  <div class="panel" style="margin-top:16px"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+const grades = ['A', 'B', 'C'].map(g => ({ value: g, label: g }));
+initPage({
+  page: 'harvests.html', title: 'Record Harvest', endpoint: '/harvests',
+  fields: [
+    { name: 'planting', label: 'Planting', optionsFrom: { endpoint: '/plantings',
+        label: r => `${r.crop?.name} - ${r.field?.name} (sown ${new Date(r.sowDate).toLocaleDateString()})` } },
+    { name: 'date', label: 'Harvest date', type: 'date' },
+    { name: 'quantityKg', label: 'Quantity (kg)', type: 'number', step: 'any' },
+    { name: 'grade', label: 'Grade', options: grades },
+    { name: 'yieldPerAcre', label: 'Yield per acre (kg)', type: 'number', step: 'any' }
+  ],
+  columns: [
+    { label: 'Planting', get: (r, m) => m.planting[r.planting?._id || r.planting] },
+    { label: 'Date', get: r => new Date(r.date).toLocaleDateString() },
+    { label: 'Quantity (kg)', get: r => r.quantityKg }, { label: 'Grade', get: r => r.grade },
+    { label: 'Yield/acre', get: r => r.yieldPerAcre }
+  ],
+  build: v => ({ planting: v.planting, date: v.date, quantityKg: +v.quantityKg,
+    grade: v.grade, yieldPerAcre: +v.yieldPerAcre })
+});
+</script>
+</body>
+</html>

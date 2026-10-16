@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Farmers</title><link rel="stylesheet" href="style.css"></head>
+<body>
+<header><h1>Crop & Farm Management System</h1><nav id="nav"></nav></header>
+<main>
+  <div class="panel"><h3 id="title"></h3><form id="form"></form><div id="msg"></div></div>
+  <div class="panel" style="margin-top:16px"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+</main>
+<script src="config.js"></script>
+<script src="app.js"></script>
+<script>
+initPage({
+  page: 'farmers.html', title: 'Add Farmer (example: Mysuru is longitude 76.64, latitude 12.30)', endpoint: '/farmers',
+  fields: [
+    { name: 'name', label: 'Name' },
+    { name: 'phone', label: 'Phone (10 digits)' },
+    { name: 'village', label: 'Village' },
+    { name: 'district', label: 'District' },
+    { name: 'lng', label: 'Longitude', type: 'number', step: 'any' },
+    { name: 'lat', label: 'Latitude', type: 'number', step: 'any' }
+  ],
+  columns: [
+    { label: 'Name', get: r => r.name }, { label: 'Phone', get: r => r.phone },
+    { label: 'Village', get: r => r.village }, { label: 'District', get: r => r.district },
+    { label: 'Farms', get: r => r.farms.length }
+  ],
+  build: v => ({ name: v.name, phone: v.phone, village: v.village, district: v.district,
+    location: { type: 'Point', coordinates: [+v.lng, +v.lat] } })
+});
+</script>
+</body>
+</html>
